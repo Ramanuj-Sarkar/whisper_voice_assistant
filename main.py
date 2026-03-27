@@ -1,16 +1,31 @@
-# This is a sample Python script.
+import os
+from audio import record_while_held
+from transcribe import transcribe
+from llm import chat
+from tts import speak
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+conversation = []
 
+print("Whisper Voice Assistant — hold SPACE to talk, Ctrl+C to quit\n")
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
+try:
+    while True:
+        wav_path = record_while_held()
+        user_text = transcribe(wav_path)
+        os.remove(wav_path)
 
+        if not user_text:
+            continue
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+        print(f"You: {user_text}")
+        conversation.append({"role": "user", "content": user_text})
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+        reply = chat(conversation)
+        conversation.append({"role": "assistant", "content": reply})
+
+        print(f"Claude: {reply}\n")
+        speak(reply)
+except KeyboardInterrupt:
+    print("\nGoodbye! (keyboard interrupt)")
+except SystemExit:
+    print("\nGoodbye! (system exit)")
